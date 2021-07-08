@@ -20,7 +20,7 @@ namespace ByteBank.Core.Repository
                     .RuleFor(p => p.Tipo, f => f.PickRandom<TipoMovimento>())
                     .RuleFor(p => p.Data, f => f.Date.Recent())
                 .Generate(1500))
-                .Generate(100);                    
+                .Generate(10);                    
         }
     }
 }
