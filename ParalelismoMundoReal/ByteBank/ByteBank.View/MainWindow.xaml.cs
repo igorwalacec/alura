@@ -38,9 +38,10 @@ namespace ByteBank.View
             BtnProcessar.IsEnabled = false;
 
             var contas = r_Repositorio.ObterContaClientes();
-            
 
-            AtualizarView(new List<string>(), TimeSpan.Zero);
+            PgsProgresso.Maximum = contas.Count();
+
+            LimparView();
 
             var inicio = DateTime.Now;
 
@@ -54,15 +55,31 @@ namespace ByteBank.View
             BtnProcessar.IsEnabled = true;            
         }
         private async Task<List<string>> ConsolidarContas(IEnumerable<ContaCliente> contas)
-        {            
+        {
+            var taskSchedulerGui = TaskScheduler.FromCurrentSynchronizationContext();
             var tasks = contas.Select(conta =>
             {
-                return Task.Factory.StartNew(() => r_Servico.ConsolidarMovimentacao(conta));
+                return Task.Factory.StartNew(() =>
+                {
+                    var resultadoConsolidadcao = r_Servico.ConsolidarMovimentacao(conta);                    
+                    Task.Factory.StartNew(
+                        () => PgsProgresso.Value++,
+                        CancellationToken.None,
+                        TaskCreationOptions.None,
+                        taskSchedulerGui);
+                    return resultadoConsolidadcao;
+                });
             });
 
             var result = await Task.WhenAll(tasks);
 
             return result.ToList();
+        }
+        private void LimparView()
+        {
+            PgsProgresso.Value = 0;
+            LstResultados.ItemsSource = null;
+            TxtTempo.Text = null;
         }
         private void AtualizarView(List<String> result, TimeSpan elapsedTime)
         {
