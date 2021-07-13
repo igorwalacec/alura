@@ -46,27 +46,25 @@ namespace ByteBank.View
             var inicio = DateTime.Now;
 
             //Task.WaitAll(contasTarefas);
-
-            var resultado = await ConsolidarContas(contas).ConfigureAwait(true);
+            var byteBankProgress = new ByteBankProgress<string>(str => PgsProgresso.Value++);
+            var resultado = await ConsolidarContas(contas, byteBankProgress).ConfigureAwait(true);
 
             var fim = DateTime.Now;            
             AtualizarView(resultado, fim - inicio);
 
             BtnProcessar.IsEnabled = true;            
         }
-        private async Task<List<string>> ConsolidarContas(IEnumerable<ContaCliente> contas)
+        private async Task<List<string>> ConsolidarContas(IEnumerable<ContaCliente> contas, IProgress<string> reportadorDeProgresso)
         {
             var taskSchedulerGui = TaskScheduler.FromCurrentSynchronizationContext();
             var tasks = contas.Select(conta =>
             {
                 return Task.Factory.StartNew(() =>
                 {
-                    var resultadoConsolidadcao = r_Servico.ConsolidarMovimentacao(conta);                    
-                    Task.Factory.StartNew(
-                        () => PgsProgresso.Value++,
-                        CancellationToken.None,
-                        TaskCreationOptions.None,
-                        taskSchedulerGui);
+                    var resultadoConsolidadcao = r_Servico.ConsolidarMovimentacao(conta);
+
+                    reportadorDeProgresso.Report(resultadoConsolidadcao);
+                    
                     return resultadoConsolidadcao;
                 });
             });

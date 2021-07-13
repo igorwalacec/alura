@@ -12,7 +12,7 @@ namespace ByteBank.View.Utils
         private readonly Action<T> _handler;
         private readonly TaskScheduler _taskScheduler;
 
-        public ByteBankProgress(Action<T> handler, TaskScheduler taskScheduler)
+        public ByteBankProgress(Action<T> handler)
         {
             _handler = handler;
             _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
