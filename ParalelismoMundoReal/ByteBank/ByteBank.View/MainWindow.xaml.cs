@@ -33,9 +33,8 @@ namespace ByteBank.View
             r_Servico = new ContaClienteService();
         }
 
-        private void BtnProcessar_Click(object sender, RoutedEventArgs e)
-        {
-            var taskSchedulerUI = TaskScheduler.FromCurrentSynchronizationContext();
+        private async void BtnProcessar_Click(object sender, RoutedEventArgs e)
+        {            
             BtnProcessar.IsEnabled = false;
 
             var contas = r_Repositorio.ObterContaClientes();
@@ -44,37 +43,26 @@ namespace ByteBank.View
             AtualizarView(new List<string>(), TimeSpan.Zero);
 
             var inicio = DateTime.Now;
-            
+
             //Task.WaitAll(contasTarefas);
-            
 
-            ConsolidarContas(contas)
-                .ContinueWith((task) => {
-                    var fim = DateTime.Now;
-                    var resultado = task.Result;
-                    AtualizarView(resultado, fim - inicio);
-                }, taskSchedulerUI)
-                .ContinueWith(task => {
-                    BtnProcessar.IsEnabled = true;
-                }, taskSchedulerUI);
+            var resultado = await ConsolidarContas(contas);
+
+            var fim = DateTime.Now;            
+            AtualizarView(resultado, fim - inicio);
+
+            BtnProcessar.IsEnabled = true;            
         }
-        private Task<List<string>> ConsolidarContas(IEnumerable<ContaCliente> contas)
-        {
-            var resultado = new List<string>();
-
+        private async Task<List<string>> ConsolidarContas(IEnumerable<ContaCliente> contas)
+        {            
             var tasks = contas.Select(conta =>
             {
-                return Task.Factory.StartNew(() =>
-                {
-                    var contaResultado = r_Servico.ConsolidarMovimentacao(conta);
-                    resultado.Add(contaResultado);
-                });
+                return Task.Factory.StartNew(() => r_Servico.ConsolidarMovimentacao(conta));
             });
 
-            return Task.WhenAll(tasks)
-                .ContinueWith(t => {
-                    return resultado;
-                });
+            var result = await Task.WhenAll(tasks);
+
+            return result.ToList();
         }
         private void AtualizarView(List<String> result, TimeSpan elapsedTime)
         {
