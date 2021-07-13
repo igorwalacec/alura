@@ -46,7 +46,7 @@ namespace ByteBank.View
 
             //Task.WaitAll(contasTarefas);
 
-            var resultado = await ConsolidarContas(contas);
+            var resultado = await ConsolidarContas(contas).ConfigureAwait(true);
 
             var fim = DateTime.Now;            
             AtualizarView(resultado, fim - inicio);
