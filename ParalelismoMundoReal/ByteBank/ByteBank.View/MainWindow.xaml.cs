@@ -83,7 +83,7 @@ namespace ByteBank.View
                     //if (ct.IsCancellationRequested)
                     //    throw new OperationCanceledException(ct);
                     ct.ThrowIfCancellationRequested();
-                    var resultadoConsolidadcao = r_Servico.ConsolidarMovimentacao(conta);
+                    var resultadoConsolidadcao = r_Servico.ConsolidarMovimentacao(conta, ct);
 
                     reportadorDeProgresso.Report(resultadoConsolidadcao);
                     ct.ThrowIfCancellationRequested();
